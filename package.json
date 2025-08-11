@@ -1,0 +1,21 @@
+{
+  "name": "aquarium",
+  "version": "1.0.0",
+  "description": "",
+  "main": "script.js",
+  "scripts": {
+    "dev": "vite"
+  },
+  "keywords": [
+    "aquarium",
+    "javascript",
+    "threejs"
+  ],
+  "author": "zaqui",
+  "type": "module",
+  "dependencies": {
+    "three": "^0.179.1",
+    "vite": "^6.3.5",
+    "vite-plugin-restart": "^1.0.0"
+  }
+}
