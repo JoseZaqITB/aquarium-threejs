@@ -1,12 +1,17 @@
 import * as THREE from "three";
 import GUI from "lil-gui";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
+import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
 
 /**
  * VARS
  */
 const gui = new GUI();
 const parameters = {
+  control: {
+    speed: 0.25,
+    acceleration: 5,
+  },
   galaxy: {
     count: 1000,
     radius: 10,
@@ -69,7 +74,8 @@ const createParticles = () => {
 createParticles();
 
 // gui
-gui
+const particlesGui = gui.addFolder("particles");
+particlesGui
   .add(parameters.galaxy, "count")
   .min(1)
   .max(10000)
@@ -77,7 +83,7 @@ gui
   .onFinishChange(() => {
     createParticles();
   });
-gui
+particlesGui
   .add(parameters.galaxy, "radius")
   .min(1)
   .max(1000)
@@ -89,11 +95,11 @@ gui
  * Objects
  */
 // cube of example
-/* const cube = new THREE.Mesh(
+const cube = new THREE.Mesh(
   new THREE.BoxGeometry(1, 1, 1),
   new THREE.MeshBasicMaterial({ color: "red" })
 );
-scene.add(cube); */
+scene.add(cube);
 
 /**
  * canvas
@@ -119,11 +125,6 @@ camera.position.z = 5;
 scene.add(camera);
 
 /**
- * controls
- */
-const control = new OrbitControls(camera, canvas);
-
-/**
  * renderer
  */
 const renderer = new THREE.WebGLRenderer({
@@ -133,21 +134,99 @@ renderer.setSize(sizes.width, sizes.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
 /**
+ * controls
+ */
+const control = new PointerLockControls(camera, renderer.domElement);
+const velocity = { forward: 0, right: 0 };
+
+const forwardCameraDirection = new THREE.Vector3(0, 0, 0);
+control.getDirection(forwardCameraDirection);
+
+// listeners
+window.addEventListener("click", () => {
+  if (!control.isLocked) control.lock();
+});
+
+window.addEventListener("keydown", (key) => {
+  switch (key.code) {
+    case "KeyW":
+      velocity.forward = 1;
+      break;
+    case "KeyS":
+      velocity.forward = -1;
+      break;
+    case "KeyD":
+      velocity.right = 1;
+      break;
+    case "KeyA":
+      velocity.right = -1;
+      break;
+  }
+});
+
+window.addEventListener("keyup", (key) => {
+  switch (key.code) {
+    case "KeyW":
+      velocity.forward = 0;
+      control.getDirection(forwardCameraDirection);
+      if (velocity.right === 0) currentVelocity = 0;
+      break;
+    case "KeyS":
+      velocity.forward = -0;
+      control.getDirection(forwardCameraDirection);
+      if (velocity.right === 0) currentVelocity = 0;
+      break;
+    case "KeyD":
+      velocity.right = 0;
+      if (velocity.forward === 0) currentVelocity = 0;
+      break;
+    case "KeyA":
+      velocity.right = -0;
+      if (velocity.forward === 0) currentVelocity = 0;
+      break;
+  }
+});
+
+control.getDi;
+
+// guis
+const controlGui = gui.addFolder("Control");
+controlGui.add(parameters.control, "acceleration").min(0.1).max(50).step(0.1);
+controlGui.add(parameters.control, "speed").min(0.25).max(100).step(0.25);
+
+/**
  * loop
  */
 const clock = new THREE.Clock();
 let prevTime = 0;
+let currentVelocity = 0;
 const tick = () => {
   const elapsedTime = clock.getElapsedTime();
   const deltaTime = elapsedTime - prevTime;
   prevTime = elapsedTime;
   // update control
-  control.update(deltaTime);
+  if (velocity.forward != 0 || velocity.right != 0) {
+    currentVelocity +=
+      (parameters.control.speed * 0.025 - currentVelocity) *
+      parameters.control.acceleration *
+      deltaTime;
+    if (velocity.forward != 0) {
+      control.moveForward(velocity.forward * currentVelocity);
+      control.getDirection(forwardCameraDirection);
+
+      camera.position.y +=
+        forwardCameraDirection.y * velocity.forward * currentVelocity;
+    }
+
+    if (velocity.right != 0)
+      control.moveRight(velocity.right * currentVelocity);
+  }
 
   // render
   renderer.render(scene, camera);
   // update objects
   //cube.position.y = Math.sin(elapsedTime) * 2
+
   // call tick again for NEXT FRAME
   window.requestAnimationFrame(tick);
 };
