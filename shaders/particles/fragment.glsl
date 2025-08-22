@@ -1,0 +1,4 @@
+void main()
+{
+    gl_FragColor = linearToOutputTexel(vec4(vec3(0.5),1.0));
+}

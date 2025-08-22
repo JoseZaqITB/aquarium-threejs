@@ -2,6 +2,8 @@ import * as THREE from "three";
 import GUI from "lil-gui";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
+import vertexShader from "../shaders/particles/vertex.glsl"
+import fragmentShader from "../shaders/particles/fragment.glsl"
 
 /**
  * VARS
@@ -64,9 +66,18 @@ const createParticles = () => {
   particleGeometry = new THREE.BufferGeometry();
   particleGeometry.setAttribute("position", posAttribute);
 
-  particleMaterial = new THREE.PointsMaterial({
+  /* particleMaterial = new THREE.PointsMaterial({
     size: 0.025,
-  });
+  }); */
+
+  particleMaterial = new THREE.ShaderMaterial({
+    vertexShader: vertexShader,
+    fragmentShader: fragmentShader,
+    uniforms: {
+      uTime: {value: 0},
+      uFrequency: {value: 0.1}
+    }
+  })
   oceanParticles = new THREE.Points(particleGeometry, particleMaterial);
   // adding
   scene.add(oceanParticles);
@@ -91,15 +102,22 @@ particlesGui
   .onFinishChange(() => {
     createParticles();
   });
+// material
+particlesGui
+  .add(particleMaterial.uniforms.uFrequency, "value")
+  .min(0.1)
+  .max(10)
+  .step(0.1)
+  .name("uFrequency");
 /**
  * Objects
  */
 // cube of example
-const cube = new THREE.Mesh(
+/* const cube = new THREE.Mesh(
   new THREE.BoxGeometry(1, 1, 1),
   new THREE.MeshBasicMaterial({ color: "red" })
 );
-scene.add(cube);
+scene.add(cube); */
 
 /**
  * canvas
@@ -204,6 +222,10 @@ const tick = () => {
   const elapsedTime = clock.getElapsedTime();
   const deltaTime = elapsedTime - prevTime;
   prevTime = elapsedTime;
+  // shaders
+  if(particleMaterial !== null) {
+    particleMaterial.uniforms.uTime.value = elapsedTime;
+  }
   // update control
   if (velocity.forward != 0 || velocity.right != 0) {
     currentVelocity +=

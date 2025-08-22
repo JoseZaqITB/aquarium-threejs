@@ -17,6 +17,7 @@
     "lil-gui": "^0.20.0",
     "three": "^0.179.1",
     "vite": "^6.3.5",
+    "vite-plugin-glsl": "^1.5.1",
     "vite-plugin-restart": "^1.0.0"
   }
 }
