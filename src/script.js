@@ -2,9 +2,9 @@ import * as THREE from "three";
 import GUI from "lil-gui";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
-import vertexShader from "../shaders/particles/vertex.glsl"
-import fragmentShader from "../shaders/particles/fragment.glsl"
-
+import vertexShader from "../shaders/particles/vertex.glsl";
+import fragmentShader from "../shaders/particles/fragment.glsl";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 /**
  * VARS
  */
@@ -17,6 +17,10 @@ const parameters = {
   galaxy: {
     count: 1000,
     radius: 10,
+  },
+  scene: {
+    fogDensity: 0.2,
+    background: "#1f4366",
   },
 };
 /**
@@ -41,7 +45,37 @@ window.addEventListener("resize", () => {
  */
 const scene = new THREE.Scene();
 // settings
-scene.background = new THREE.Color(0x1f4366);
+const fog = new THREE.FogExp2(
+  parameters.scene.background,
+  parameters.scene.fogDensity
+);
+scene.fog = fog;
+scene.background = new THREE.Color(parameters.scene.background);
+// guis
+const guiScene = gui.addFolder("scene");
+guiScene.addColor(parameters.scene, "background").onChange(() => {
+  scene.background.set(parameters.scene.background);
+  fog.color.set(parameters.scene.background);
+});
+guiScene
+  .add(parameters.scene, "fogDensity")
+  .min(0.01)
+  .max(1)
+  .step(0.01)
+  .onChange(() => {
+    fog.density = parameters.scene.fogDensity;
+  });
+
+/**
+ * models
+ */
+const gltfLoader = new GLTFLoader();
+
+let fish = null;
+gltfLoader.load("assets/models/fish.glb", (gltf) => {
+  fish = gltf.scene;
+  scene.add(gltf.scene);
+});
 /**
  * Particles
  */
@@ -74,10 +108,10 @@ const createParticles = () => {
     vertexShader: vertexShader,
     fragmentShader: fragmentShader,
     uniforms: {
-      uTime: {value: 0},
-      uFrequency: {value: 0.1}
-    }
-  })
+      uTime: { value: 0 },
+      uFrequency: { value: 0.1 },
+    },
+  });
   oceanParticles = new THREE.Points(particleGeometry, particleMaterial);
   // adding
   scene.add(oceanParticles);
@@ -118,7 +152,11 @@ particlesGui
   new THREE.MeshBasicMaterial({ color: "red" })
 );
 scene.add(cube); */
-
+/**
+ * Lights
+ */
+const ambientLight = new THREE.AmbientLight("#ffffff", 3);
+scene.add(ambientLight);
 /**
  * canvas
  */
@@ -205,8 +243,6 @@ window.addEventListener("keyup", (key) => {
   }
 });
 
-control.getDi;
-
 // guis
 const controlGui = gui.addFolder("Control");
 controlGui.add(parameters.control, "acceleration").min(0.1).max(50).step(0.1);
@@ -222,8 +258,9 @@ const tick = () => {
   const elapsedTime = clock.getElapsedTime();
   const deltaTime = elapsedTime - prevTime;
   prevTime = elapsedTime;
+    
   // shaders
-  if(particleMaterial !== null) {
+  if (particleMaterial !== null) {
     particleMaterial.uniforms.uTime.value = elapsedTime;
   }
   // update control
