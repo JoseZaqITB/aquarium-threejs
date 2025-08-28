@@ -5,18 +5,20 @@ import { PointerLockControls } from "three/addons/controls/PointerLockControls.j
 import vertexShader from "../shaders/particles/vertex.glsl";
 import fragmentShader from "../shaders/particles/fragment.glsl";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import gsap from "gsap";
+
 /**
  * VARS
  */
 const gui = new GUI();
 const parameters = {
   control: {
-    speed: 0.25,
+    speed: 1,
     acceleration: 5,
   },
   galaxy: {
-    count: 1000,
-    radius: 10,
+    count: 1500,
+    radius: 50,
   },
   scene: {
     fogDensity: 0.2,
@@ -72,8 +74,44 @@ guiScene
 const gltfLoader = new GLTFLoader();
 
 let fish = null;
+let fishSwimAnimation = null;
 gltfLoader.load("assets/models/fish.glb", (gltf) => {
   fish = gltf.scene;
+  // fix rotation
+  fish.rotation.y -= Math.PI * 0.5;
+  fish.updateMatrixWorld();
+
+  fish.traverse((child) => {
+    if (child.isMesh) {
+      child.geometry.applyMatrix4(fish.matrixWorld);
+    }
+  });
+
+  fish.position.z += 3;
+  fish.lookAt(new THREE.Vector3(0,0,0))
+  // create animation
+
+  const moveFish = () => {
+    const destination = new THREE.Vector3(
+      (Math.random() - 0.5) * 4,
+      (Math.random() - 0.5) * 4,
+      (Math.random() - 0.5) * 4
+    );
+    // rotate
+    
+    fish.lookAt(destination.clone().normalize());
+    console.log(destination);
+    
+    // move
+    gsap.to(fish.position, {
+      duration: 5,
+      x: destination.x,
+      y: destination.y,
+      z: destination.z,
+      onComplete: moveFish,
+    });
+  };
+  moveFish();
   scene.add(gltf.scene);
 });
 /**
@@ -92,13 +130,23 @@ const createParticles = () => {
   //
   const count = parameters.galaxy.count;
   const positions = new Float32Array(count * 3);
-  positions.forEach(
-    (pos, index) =>
-      (positions[index] = (Math.random() - 0.5) * parameters.galaxy.radius)
-  );
+  const scales = new Float32Array(count * 1);
+
+  for (let i = 0; i < count; i++) {
+    const i3 = i * 3;
+
+    // positions
+    positions[i3 + 0] = (Math.random() - 0.5) * parameters.galaxy.radius;
+    positions[i3 + 1] = (Math.random() - 0.5) * parameters.galaxy.radius;
+    positions[i3 + 2] = (Math.random() - 0.5) * parameters.galaxy.radius;
+
+    // sizes
+    scales[i] = Math.random();
+  }
   const posAttribute = new THREE.BufferAttribute(positions, 3);
   particleGeometry = new THREE.BufferGeometry();
   particleGeometry.setAttribute("position", posAttribute);
+  particleGeometry.setAttribute("aScale", new THREE.BufferAttribute(scales, 1));
 
   /* particleMaterial = new THREE.PointsMaterial({
     size: 0.025,
@@ -110,39 +158,37 @@ const createParticles = () => {
     uniforms: {
       uTime: { value: 0 },
       uFrequency: { value: 0.1 },
+      uSize: { value: 25 * renderer.getPixelRatio() },
     },
   });
   oceanParticles = new THREE.Points(particleGeometry, particleMaterial);
   // adding
   scene.add(oceanParticles);
 };
-createParticles();
 
 // gui
-const particlesGui = gui.addFolder("particles");
-particlesGui
-  .add(parameters.galaxy, "count")
-  .min(1)
-  .max(10000)
-  .step(100)
-  .onFinishChange(() => {
-    createParticles();
-  });
-particlesGui
-  .add(parameters.galaxy, "radius")
-  .min(1)
-  .max(1000)
-  .step(1)
-  .onFinishChange(() => {
-    createParticles();
-  });
-// material
-particlesGui
-  .add(particleMaterial.uniforms.uFrequency, "value")
-  .min(0.1)
-  .max(10)
-  .step(0.1)
-  .name("uFrequency");
+const createGuiParticles = () => {
+  const particlesGui = gui.addFolder("particles");
+  particlesGui
+    .add(parameters.galaxy, "count")
+    .min(1)
+    .max(10000)
+    .step(100)
+    .onFinishChange(createParticles);
+  particlesGui
+    .add(parameters.galaxy, "radius")
+    .min(1)
+    .max(100)
+    .step(0.1)
+    .onFinishChange(createParticles);
+  // material
+  particlesGui
+    .add(particleMaterial.uniforms.uFrequency, "value")
+    .min(0.1)
+    .max(10)
+    .step(0.1)
+    .name("uFrequency");
+};
 /**
  * Objects
  */
@@ -157,6 +203,11 @@ scene.add(cube); */
  */
 const ambientLight = new THREE.AmbientLight("#ffffff", 3);
 scene.add(ambientLight);
+/**
+ * Helpers
+ */
+const axesHelper = new THREE.AxesHelper(2);
+scene.add(axesHelper)
 /**
  * canvas
  */
@@ -179,7 +230,6 @@ const camera = new THREE.PerspectiveCamera(
 );
 camera.position.z = 5;
 scene.add(camera);
-
 /**
  * renderer
  */
@@ -199,9 +249,9 @@ const forwardCameraDirection = new THREE.Vector3(0, 0, 0);
 control.getDirection(forwardCameraDirection);
 
 // listeners
-window.addEventListener("click", () => {
+/* window.addEventListener("click", () => {
   if (!control.isLocked) control.lock();
-});
+}); */
 
 window.addEventListener("keydown", (key) => {
   switch (key.code) {
@@ -217,6 +267,9 @@ window.addEventListener("keydown", (key) => {
     case "KeyA":
       velocity.right = -1;
       break;
+    case "Enter":
+      if (!control.isLocked) control.lock();
+      break; // TEMPORARY!!! ORIGINALLY CLICK LISTENER
   }
 });
 
@@ -258,7 +311,6 @@ const tick = () => {
   const elapsedTime = clock.getElapsedTime();
   const deltaTime = elapsedTime - prevTime;
   prevTime = elapsedTime;
-    
   // shaders
   if (particleMaterial !== null) {
     particleMaterial.uniforms.uTime.value = elapsedTime;
@@ -291,4 +343,6 @@ const tick = () => {
 };
 
 // play
+createParticles();
+createGuiParticles();
 tick();

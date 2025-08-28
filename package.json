@@ -14,6 +14,7 @@
   "author": "zaqui",
   "type": "module",
   "dependencies": {
+    "gsap": "^3.13.0",
     "lil-gui": "^0.20.0",
     "three": "^0.179.1",
     "vite": "^6.3.5",
