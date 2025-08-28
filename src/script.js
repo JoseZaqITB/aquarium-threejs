@@ -24,6 +24,9 @@ const parameters = {
     fogDensity: 0.2,
     background: "#1f4366",
   },
+  world: {
+    fishQ: 25,
+  },
 };
 /**
  * Listeners
@@ -77,6 +80,8 @@ let fish = null;
 let fishSwimAnimation = null;
 gltfLoader.load("assets/models/fish.glb", (gltf) => {
   fish = gltf.scene;
+  fish.position.random();
+
   // fix rotation
   fish.rotation.y -= Math.PI * 0.5;
   fish.updateMatrixWorld();
@@ -87,32 +92,52 @@ gltfLoader.load("assets/models/fish.glb", (gltf) => {
     }
   });
 
-  fish.position.z += 3;
-  fish.lookAt(new THREE.Vector3(0,0,0))
   // create animation
-
-  const moveFish = () => {
+  const moveFish = (fishModel) => {
+    const maxDisplacement = 20;
     const destination = new THREE.Vector3(
-      (Math.random() - 0.5) * 4,
-      (Math.random() - 0.5) * 4,
-      (Math.random() - 0.5) * 4
+      (Math.random() - 0.5) * maxDisplacement,
+      (Math.random() - 0.5) * maxDisplacement,
+      (Math.random() - 0.5) * maxDisplacement
+    );
+    destination.add(fishModel.position);
+    destination.clamp(
+      new THREE.Vector3(
+        -parameters.galaxy.radius,
+        -parameters.galaxy.radius,
+        -parameters.galaxy.radius
+      ),
+      new THREE.Vector3(
+        parameters.galaxy.radius,
+        parameters.galaxy.radius,
+        parameters.galaxy.radius
+      )
     );
     // rotate
-    
-    fish.lookAt(destination.clone().normalize());
-    console.log(destination);
-    
+
+    fishModel.lookAt(destination);
     // move
-    gsap.to(fish.position, {
+    gsap.to(fishModel.position, {
       duration: 5,
       x: destination.x,
       y: destination.y,
       z: destination.z,
-      onComplete: moveFish,
+      onComplete: () => moveFish(fishModel),
     });
   };
-  moveFish();
-  scene.add(gltf.scene);
+  const createFish = () => {
+    const fishModel = fish.clone();
+    // random start position
+    fishModel.position.random();
+    fishModel.position.multiplyScalar(parameters.galaxy.radius * 0.3)
+    // animate
+    moveFish(fishModel);
+    // add
+    scene.add(fishModel);
+  };
+  for (let i = 0; i <= parameters.world.fishQ; i++) {
+    createFish();
+  }
 });
 /**
  * Particles
@@ -207,7 +232,7 @@ scene.add(ambientLight);
  * Helpers
  */
 const axesHelper = new THREE.AxesHelper(2);
-scene.add(axesHelper)
+scene.add(axesHelper);
 /**
  * canvas
  */
