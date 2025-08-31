@@ -13,6 +13,8 @@ import gsap from "gsap";
  */
 const gui = new GUI();
 const rgbeLoader = new RGBELoader();
+const menuImg = document.querySelector("img.menu");
+
 const parameters = {
   control: {
     speed: 1,
@@ -79,7 +81,7 @@ rgbeLoader.load("./enviromentMaps/ocean-1080.hdr", (envMap) => {
   envMap.mapping = THREE.EquirectangularReflectionMapping;
 
   scene.background = envMap;
-})
+});
 /**
  * models
  */
@@ -138,7 +140,7 @@ gltfLoader.load("assets/models/fish.glb", (gltf) => {
     const fishModel = fish.clone();
     // random start position
     fishModel.position.random();
-    fishModel.position.multiplyScalar(parameters.galaxy.radius * 0.3)
+    fishModel.position.multiplyScalar(parameters.galaxy.radius * 0.3);
     // animate
     moveFish(fishModel);
     // add
@@ -238,11 +240,6 @@ scene.add(cube); */
 const ambientLight = new THREE.AmbientLight("#ffffff", 3);
 scene.add(ambientLight);
 /**
- * Helpers
- */
-const axesHelper = new THREE.AxesHelper(2);
-scene.add(axesHelper);
-/**
  * canvas
  */
 // parameters
@@ -281,11 +278,15 @@ const velocity = { forward: 0, right: 0 };
 
 const forwardCameraDirection = new THREE.Vector3(0, 0, 0);
 control.getDirection(forwardCameraDirection);
-
 // listeners
-/* window.addEventListener("click", () => {
-  if (!control.isLocked) control.lock();
-}); */
+window.addEventListener("click", () => {
+  if (!control.isLocked) {
+        // hide menu
+        menuImg.style.display = "none";
+        // enable controls
+        control.lock();
+      }
+});
 
 window.addEventListener("keydown", (key) => {
   switch (key.code) {
@@ -302,8 +303,17 @@ window.addEventListener("keydown", (key) => {
       velocity.right = -1;
       break;
     case "Enter":
-      if (!control.isLocked) control.lock();
+      if (!control.isLocked) {
+        // hide menu
+        menuImg.style.display = "none";
+        // enable controls
+        control.lock();
+      }
       break; // TEMPORARY!!! ORIGINALLY CLICK LISTENER
+    case "Escape":
+      // hide menu
+      menuImg.style.display = "block";
+      break;
   }
 });
 
