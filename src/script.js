@@ -23,24 +23,28 @@ const parameters = {
   },
   galaxy: {
     count: 1500,
-    diameter: 20,
+    diameter: 40,
   },
   scene: {
     fogDensity: 0.2,
     background: "#072244",
   },
   world: {
-    fishQ:  30,
+    fishQ: 30,
   },
 };
 /**
  *  textures
  */
-const glassAlphaMap = textureLoader.load("./images/glass_alphaMap.jpg");
-glassAlphaMap.repeat = new THREE.Vector2(4,4)
+const glassAlphaMap = textureLoader.load("./images/glass_alphaMap_v2.jpg");
+glassAlphaMap.repeat = new THREE.Vector2(4, 4);
 glassAlphaMap.wrapS = THREE.RepeatWrapping;
 glassAlphaMap.wrapT = THREE.RepeatWrapping;
 
+const gradientTexture = textureLoader.load("./textures/gradients/5.jpg");
+gradientTexture.minFilter = THREE.NearestFilter;
+gradientTexture.magFilter = THREE.NearestFilter;
+gradientTexture.generateMipmaps = false;
 /**
  * Listeners
  */
@@ -90,7 +94,11 @@ rgbeLoader.load("./enviromentMaps/ocean-1080.hdr", (envMap) => {
   envMap.mapping = THREE.EquirectangularReflectionMapping;
 
   scene.background = envMap;
+  scene.environment = envMap;
+  scene.environmentIntensity = 0.01;
 });
+// guis
+guiScene.add(scene, "environmentIntensity").min(0.01).max(3).step(0.01);
 /**
  * models
  */
@@ -148,7 +156,7 @@ gltfLoader.load("assets/models/fish.glb", (gltf) => {
   const createFish = () => {
     const fishModel = fish.clone();
     const random = Math.random() * 3;
-    fishModel.scale.set(random, random, random)
+    fishModel.scale.set(random, random, random);
     // random start position
     fishModel.position.random();
     fishModel.position.multiplyScalar(parameters.galaxy.diameter * 0.1);
@@ -244,36 +252,40 @@ const createGuiParticles = () => {
 const zaqui = new THREE.Group();
 const zaquiColor = "#042C71";
 const head = new THREE.Mesh(
-  new THREE.SphereGeometry(4, 36,36),
-  new THREE.MeshStandardMaterial({
-    color: zaquiColor
+  new THREE.SphereGeometry(4, 36, 36),
+  new THREE.MeshToonMaterial({
+    gradientMap: gradientTexture,
+    color: zaquiColor,
   })
-)
+);
 
 const eye1 = new THREE.Mesh(
-  new THREE.CircleGeometry(0.5,36,36),
-  new THREE.MeshStandardMaterial({color:"white"})
-)
+  new THREE.CircleGeometry(0.5, 36, 36),
+  new THREE.MeshToonMaterial({ gradientMap: gradientTexture, color: "white" })
+);
 
 eye1.position.z = 4;
 eye1.position.x = -1;
-const eye2 = eye1.clone()
+const eye2 = eye1.clone();
 eye2.position.x = 1;
 
 const pupil1 = new THREE.Mesh(
-  new THREE.CircleGeometry(0.1,36,36),
-  new THREE.MeshStandardMaterial({color:"black"})
-)
+  new THREE.CircleGeometry(0.1, 36, 36),
+  new THREE.MeshToonMaterial({ gradientMap: gradientTexture, color: "black" })
+);
 pupil1.position.z = 4.01;
 pupil1.position.x = -1;
 
 const pupil2 = pupil1.clone();
 pupil2.position.x = 1;
 
-const hand1 =  new THREE.Mesh(
-  new THREE.CapsuleGeometry( 1, 4, 4, 8 ),
-  new THREE.MeshStandardMaterial({color:zaquiColor})
-)
+const hand1 = new THREE.Mesh(
+  new THREE.CapsuleGeometry(1, 4, 4, 8),
+  new THREE.MeshToonMaterial({
+    gradientMap: gradientTexture,
+    color: zaquiColor,
+  })
+);
 
 hand1.position.x = -8;
 hand1.position.z = 2;
@@ -282,42 +294,46 @@ hand1.rotation.x = Math.PI * 0.25;
 const hand2 = hand1.clone();
 hand2.position.x = 8;
 
-const body =  new THREE.Mesh(
-  new THREE.CapsuleGeometry( 2, 6, 4, 8 ),
-  new THREE.MeshStandardMaterial({color:zaquiColor})
-)
+const body = new THREE.Mesh(
+  new THREE.CapsuleGeometry(2, 6, 4, 8),
+  new THREE.MeshToonMaterial({
+    gradientMap: gradientTexture,
+    color: zaquiColor,
+  })
+);
 body.position.y = -6;
 
 zaqui.add(head, eye1, eye2, hand1, hand2, body, pupil1, pupil2);
-zaqui.position.set(0,0 , - parameters.galaxy.diameter * 0.5 - 8.5)
+zaqui.position.set(0, 0, -parameters.galaxy.diameter * 0.5 - 6);
 scene.add(zaqui);
 
 // aquarium walls
-const walls = new THREE.Group()
+const walls = new THREE.Group();
 const wallPos = parameters.galaxy.diameter * 0.5 + 0.25;
 const wall1 = new THREE.Mesh(
-  new THREE.PlaneGeometry( wallPos * 2, wallPos * 2),
-  new THREE.MeshStandardMaterial({alphaMap: glassAlphaMap, transparent: true})
-)
+  new THREE.PlaneGeometry(wallPos * 2, wallPos * 5),
+  new THREE.MeshToonMaterial({
+    gradientMap: gradientTexture,
+    alphaMap: glassAlphaMap,
+    transparent: true,
+  })
+);
+wall1.position.y -= wallPos * 1.25;
 const wall2 = wall1.clone();
 const wall3 = wall1.clone();
 const wall4 = wall1.clone();
-const wall5 = wall1.clone();
 
-wall2.rotation.y = - Math.PI * 0.5;
+wall2.rotation.y = -Math.PI * 0.5;
 wall3.rotation.y = Math.PI;
-wall4.rotation.y =  Math.PI * 0.5;
-wall5.rotation.x = - Math.PI * 0.5;
+wall4.rotation.y = Math.PI * 0.5;
 
-wall1.position.z = - wallPos;
+wall1.position.z = -wallPos;
 wall2.position.x = wallPos;
 wall3.position.z = wallPos;
-wall4.position.x = - wallPos;
-wall5.position.y = - wallPos;
+wall4.position.x = -wallPos;
 
-
-walls.add(wall1, wall2, wall3, wall4, wall5)
-scene.add(walls)
+walls.add(wall1, wall2, wall3, wall4);
+scene.add(walls);
 // cube of example
 /* const cube = new THREE.Mesh(
   new THREE.BoxGeometry(1, 1, 1),
@@ -328,8 +344,8 @@ scene.add(cube); */
 /**
  * Lights
  */
-const ambientLight = new THREE.AmbientLight("#ffffff", 3);
-scene.add(ambientLight);
+/* const ambientLight = new THREE.AmbientLight("#545454", 1);
+scene.add(ambientLight); */
 /**
  * canvas
  */
@@ -365,18 +381,18 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
  * controls
  */
 const control = new PointerLockControls(camera, renderer.domElement);
-const velocity = { forward: 0, right: 0 };
+const velocity = { forward: 0, right: 0, up: 0 };
 
 const forwardCameraDirection = new THREE.Vector3(0, 0, 0);
 control.getDirection(forwardCameraDirection);
 // listeners
 window.addEventListener("click", () => {
   if (!control.isLocked) {
-        // hide menu
-        menuImg.style.display = "none";
-        // enable controls
-        control.lock();
-      }
+    // hide menu
+    menuImg.style.display = "none";
+    // enable controls
+    control.lock();
+  }
 });
 
 window.addEventListener("keydown", (key) => {
@@ -392,6 +408,12 @@ window.addEventListener("keydown", (key) => {
       break;
     case "KeyA":
       velocity.right = -1;
+      break;
+    case "KeyE":
+      velocity.up = 1;
+      break;
+    case "KeyQ":
+      velocity.up = -1;
       break;
     case "Enter":
       if (!control.isLocked) {
@@ -428,6 +450,14 @@ window.addEventListener("keyup", (key) => {
       velocity.right = -0;
       if (velocity.forward === 0) currentVelocity = 0;
       break;
+    case "KeyE":
+      velocity.up = 0;
+      if (velocity.up === 0) currentVelocity = 0;
+      break;
+    case "KeyQ":
+      velocity.up = 0;
+      if (velocity.up === 0) currentVelocity = 0;
+      break;
   }
 });
 
@@ -451,7 +481,7 @@ const tick = () => {
     particleMaterial.uniforms.uTime.value = elapsedTime;
   }
   // update control
-  if (velocity.forward != 0 || velocity.right != 0) {
+  if (velocity.forward != 0 || velocity.right != 0 || velocity.up != 0) {
     currentVelocity +=
       (parameters.control.speed * 0.025 - currentVelocity) *
       parameters.control.acceleration *
@@ -466,9 +496,16 @@ const tick = () => {
 
     if (velocity.right != 0)
       control.moveRight(velocity.right * currentVelocity);
+
+    if (velocity.up != 0) {
+      camera.position.y += velocity.up * currentVelocity;
+    }
   }
   // limit distance from origin
-  if(control.getObject().position.length() >= parameters.galaxy.diameter * 0.5) {
+  if (
+    control.getObject().position.length() >=
+    parameters.galaxy.diameter * 0.5
+  ) {
     control.getObject().position.setLength(parameters.galaxy.diameter * 0.5);
   }
   // render
