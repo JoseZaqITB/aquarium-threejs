@@ -22,14 +22,14 @@ const parameters = {
   },
   galaxy: {
     count: 1500,
-    radius: 50,
+    diameter: 20,
   },
   scene: {
     fogDensity: 0.2,
-    background: "#1f4366",
+    background: "#072244",
   },
   world: {
-    fishQ: 25,
+    fishQ:  30,
   },
 };
 /**
@@ -114,14 +114,14 @@ gltfLoader.load("assets/models/fish.glb", (gltf) => {
     destination.add(fishModel.position);
     destination.clamp(
       new THREE.Vector3(
-        -parameters.galaxy.radius,
-        -parameters.galaxy.radius,
-        -parameters.galaxy.radius
+        -parameters.galaxy.diameter * 0.5,
+        -parameters.galaxy.diameter * 0.5,
+        -parameters.galaxy.diameter * 0.5
       ),
       new THREE.Vector3(
-        parameters.galaxy.radius,
-        parameters.galaxy.radius,
-        parameters.galaxy.radius
+        parameters.galaxy.diameter * 0.5,
+        parameters.galaxy.diameter * 0.5,
+        parameters.galaxy.diameter * 0.5
       )
     );
     // rotate
@@ -138,9 +138,11 @@ gltfLoader.load("assets/models/fish.glb", (gltf) => {
   };
   const createFish = () => {
     const fishModel = fish.clone();
+    const random = Math.random() * 3;
+    fishModel.scale.set(random, random, random)
     // random start position
     fishModel.position.random();
-    fishModel.position.multiplyScalar(parameters.galaxy.radius * 0.3);
+    fishModel.position.multiplyScalar(parameters.galaxy.diameter * 0.1);
     // animate
     moveFish(fishModel);
     // add
@@ -172,9 +174,9 @@ const createParticles = () => {
     const i3 = i * 3;
 
     // positions
-    positions[i3 + 0] = (Math.random() - 0.5) * parameters.galaxy.radius;
-    positions[i3 + 1] = (Math.random() - 0.5) * parameters.galaxy.radius;
-    positions[i3 + 2] = (Math.random() - 0.5) * parameters.galaxy.radius;
+    positions[i3 + 0] = (Math.random() - 0.5) * parameters.galaxy.diameter;
+    positions[i3 + 1] = (Math.random() - 0.5) * parameters.galaxy.diameter;
+    positions[i3 + 2] = (Math.random() - 0.5) * parameters.galaxy.diameter;
 
     // sizes
     scales[i] = Math.random();
@@ -212,7 +214,7 @@ const createGuiParticles = () => {
     .step(100)
     .onFinishChange(createParticles);
   particlesGui
-    .add(parameters.galaxy, "radius")
+    .add(parameters.galaxy, "diameter")
     .min(1)
     .max(100)
     .step(0.1)
@@ -228,11 +230,64 @@ const createGuiParticles = () => {
 /**
  * Objects
  */
+// zaqui
+
+const zaqui = new THREE.Group();
+const zaquiColor = "#042C71";
+const head = new THREE.Mesh(
+  new THREE.SphereGeometry(4, 36,36),
+  new THREE.MeshStandardMaterial({
+    color: zaquiColor
+  })
+)
+
+const eye1 = new THREE.Mesh(
+  new THREE.CircleGeometry(0.5,36,36),
+  new THREE.MeshStandardMaterial({color:"white"})
+)
+
+eye1.position.z = 4;
+eye1.position.x = -1;
+const eye2 = eye1.clone()
+eye2.position.x = 1;
+
+const pupil1 = new THREE.Mesh(
+  new THREE.CircleGeometry(0.1,36,36),
+  new THREE.MeshStandardMaterial({color:"black"})
+)
+pupil1.position.z = 4.01;
+pupil1.position.x = -1;
+
+const pupil2 = pupil1.clone();
+pupil2.position.x = 1;
+
+const hand1 =  new THREE.Mesh(
+  new THREE.CapsuleGeometry( 1, 4, 4, 8 ),
+  new THREE.MeshStandardMaterial({color:zaquiColor})
+)
+
+hand1.position.x = -8;
+hand1.position.z = 2;
+hand1.rotation.x = Math.PI * 0.25;
+
+const hand2 = hand1.clone();
+hand2.position.x = 8;
+
+const body =  new THREE.Mesh(
+  new THREE.CapsuleGeometry( 2, 6, 4, 8 ),
+  new THREE.MeshStandardMaterial({color:zaquiColor})
+)
+body.position.y = -6;
+
+zaqui.add(head, eye1, eye2, hand1, hand2, body, pupil1, pupil2);
+zaqui.position.set(0,0 , - parameters.galaxy.diameter * 0.5 - 8.5)
+scene.add(zaqui);
 // cube of example
 /* const cube = new THREE.Mesh(
   new THREE.BoxGeometry(1, 1, 1),
   new THREE.MeshBasicMaterial({ color: "red" })
 );
+
 scene.add(cube); */
 /**
  * Lights
