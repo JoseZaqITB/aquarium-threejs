@@ -23,7 +23,7 @@ const parameters = {
   },
   galaxy: {
     count: 1500,
-    diameter: 40,
+    diameter: 25,
   },
   scene: {
     fogDensity: 0.2,
@@ -33,6 +33,8 @@ const parameters = {
     fishQ: 30,
   },
 };
+
+gui.hide();
 /**
  *  textures
  */
@@ -41,10 +43,12 @@ glassAlphaMap.repeat = new THREE.Vector2(4, 4);
 glassAlphaMap.wrapS = THREE.RepeatWrapping;
 glassAlphaMap.wrapT = THREE.RepeatWrapping;
 
-const gradientTexture = textureLoader.load("./textures/gradients/5.jpg");
+const gradientTexture = textureLoader.load("./images/3.jpg");
 gradientTexture.minFilter = THREE.NearestFilter;
 gradientTexture.magFilter = THREE.NearestFilter;
 gradientTexture.generateMipmaps = false;
+
+const noiseDisplacement = textureLoader.load("./images/noiseTexture.png");
 /**
  * Listeners
  */
@@ -109,7 +113,6 @@ let fishSwimAnimation = null;
 gltfLoader.load("assets/models/fish.glb", (gltf) => {
   fish = gltf.scene;
   fish.position.random();
-
   // fix rotation
   fish.rotation.y -= Math.PI * 0.5;
   fish.updateMatrixWorld();
@@ -122,7 +125,7 @@ gltfLoader.load("assets/models/fish.glb", (gltf) => {
 
   // create animation
   const moveFish = (fishModel) => {
-    const maxDisplacement = parameters.galaxy.diameter * 0.3;
+    const maxDisplacement = parameters.galaxy.diameter * 0.5;
     const destination = new THREE.Vector3(
       (Math.random() - 0.5) * maxDisplacement,
       (Math.random() - 0.5) * maxDisplacement,
@@ -159,7 +162,7 @@ gltfLoader.load("assets/models/fish.glb", (gltf) => {
     fishModel.scale.set(random, random, random);
     // random start position
     fishModel.position.random();
-    fishModel.position.multiplyScalar(parameters.galaxy.diameter * 0.1);
+    fishModel.position.multiplyScalar(parameters.galaxy.diameter * 0.2);
     // animate
     moveFish(fishModel);
     // add
@@ -253,15 +256,14 @@ const zaqui = new THREE.Group();
 const zaquiColor = "#042C71";
 const head = new THREE.Mesh(
   new THREE.SphereGeometry(4, 36, 36),
-  new THREE.MeshToonMaterial({
-    gradientMap: gradientTexture,
+  new THREE.MeshStandardMaterial({
     color: zaquiColor,
   })
 );
 
 const eye1 = new THREE.Mesh(
   new THREE.CircleGeometry(0.5, 36, 36),
-  new THREE.MeshToonMaterial({ gradientMap: gradientTexture, color: "white" })
+  new THREE.MeshStandardMaterial({ color: "white" })
 );
 
 eye1.position.z = 4;
@@ -271,7 +273,7 @@ eye2.position.x = 1;
 
 const pupil1 = new THREE.Mesh(
   new THREE.CircleGeometry(0.1, 36, 36),
-  new THREE.MeshToonMaterial({ gradientMap: gradientTexture, color: "black" })
+  new THREE.MeshStandardMaterial({ color: "black" })
 );
 pupil1.position.z = 4.01;
 pupil1.position.x = -1;
@@ -281,8 +283,7 @@ pupil2.position.x = 1;
 
 const hand1 = new THREE.Mesh(
   new THREE.CapsuleGeometry(1, 4, 4, 8),
-  new THREE.MeshToonMaterial({
-    gradientMap: gradientTexture,
+  new THREE.MeshStandardMaterial({
     color: zaquiColor,
   })
 );
@@ -296,8 +297,7 @@ hand2.position.x = 8;
 
 const body = new THREE.Mesh(
   new THREE.CapsuleGeometry(2, 6, 4, 8),
-  new THREE.MeshToonMaterial({
-    gradientMap: gradientTexture,
+  new THREE.MeshStandardMaterial({
     color: zaquiColor,
   })
 );
@@ -312,8 +312,7 @@ const walls = new THREE.Group();
 const wallPos = parameters.galaxy.diameter * 0.5 + 0.25;
 const wall1 = new THREE.Mesh(
   new THREE.PlaneGeometry(wallPos * 2, wallPos * 5),
-  new THREE.MeshToonMaterial({
-    gradientMap: gradientTexture,
+  new THREE.MeshStandardMaterial({
     alphaMap: glassAlphaMap,
     transparent: true,
   })
@@ -334,6 +333,20 @@ wall4.position.x = -wallPos;
 
 walls.add(wall1, wall2, wall3, wall4);
 scene.add(walls);
+
+// corals
+
+const corals = new THREE.Mesh(
+  new THREE.PlaneGeometry(wallPos * 2, wallPos * 2, 48, 48),
+  new THREE.MeshStandardMaterial({
+    color: "black",
+    displacementMap: noiseDisplacement,
+    displacementScale: 6,
+  })
+);
+corals.rotation.x = -Math.PI * 0.5;
+corals.position.y = -wallPos;
+scene.add(corals);
 // cube of example
 /* const cube = new THREE.Mesh(
   new THREE.BoxGeometry(1, 1, 1),
@@ -344,8 +357,8 @@ scene.add(cube); */
 /**
  * Lights
  */
-/* const ambientLight = new THREE.AmbientLight("#545454", 1);
-scene.add(ambientLight); */
+const ambientLight = new THREE.AmbientLight("#545454", 1);
+scene.add(ambientLight);
 /**
  * canvas
  */
@@ -427,6 +440,9 @@ window.addEventListener("keydown", (key) => {
       // hide menu
       menuImg.style.display = "block";
       break;
+    case "KeyH":
+      gui._hidden ? gui.show() : gui.hide();
+      break;
   }
 });
 
@@ -503,10 +519,10 @@ const tick = () => {
   }
   // limit distance from origin
   if (
-    control.getObject().position.length() >=
+    control.object.position.length() >=
     parameters.galaxy.diameter * 0.5
   ) {
-    control.getObject().position.setLength(parameters.galaxy.diameter * 0.5);
+    control.object.position.setLength(parameters.galaxy.diameter * 0.5);
   }
   // render
   renderer.render(scene, camera);
