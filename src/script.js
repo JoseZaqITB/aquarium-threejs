@@ -5,12 +5,14 @@ import { PointerLockControls } from "three/addons/controls/PointerLockControls.j
 import vertexShader from "../shaders/particles/vertex.glsl";
 import fragmentShader from "../shaders/particles/fragment.glsl";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { RGBELoader } from "three/examples/jsm/Addons.js";
 import gsap from "gsap";
 
 /**
  * VARS
  */
 const gui = new GUI();
+const rgbeLoader = new RGBELoader();
 const parameters = {
   control: {
     speed: 1,
@@ -70,7 +72,14 @@ guiScene
   .onChange(() => {
     fog.density = parameters.scene.fogDensity;
   });
+/**
+ * enviroment Maps
+ */
+rgbeLoader.load("./enviromentMaps/ocean-1080.hdr", (envMap) => {
+  envMap.mapping = THREE.EquirectangularReflectionMapping;
 
+  scene.background = envMap;
+})
 /**
  * models
  */
