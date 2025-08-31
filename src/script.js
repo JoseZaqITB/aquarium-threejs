@@ -13,6 +13,7 @@ import gsap from "gsap";
  */
 const gui = new GUI();
 const rgbeLoader = new RGBELoader();
+const textureLoader = new THREE.TextureLoader();
 const menuImg = document.querySelector("img.menu");
 
 const parameters = {
@@ -32,6 +33,14 @@ const parameters = {
     fishQ:  30,
   },
 };
+/**
+ *  textures
+ */
+const glassAlphaMap = textureLoader.load("./images/glass_alphaMap.jpg");
+glassAlphaMap.repeat = new THREE.Vector2(4,4)
+glassAlphaMap.wrapS = THREE.RepeatWrapping;
+glassAlphaMap.wrapT = THREE.RepeatWrapping;
+
 /**
  * Listeners
  */
@@ -105,7 +114,7 @@ gltfLoader.load("assets/models/fish.glb", (gltf) => {
 
   // create animation
   const moveFish = (fishModel) => {
-    const maxDisplacement = 20;
+    const maxDisplacement = parameters.galaxy.diameter * 0.3;
     const destination = new THREE.Vector3(
       (Math.random() - 0.5) * maxDisplacement,
       (Math.random() - 0.5) * maxDisplacement,
@@ -282,6 +291,33 @@ body.position.y = -6;
 zaqui.add(head, eye1, eye2, hand1, hand2, body, pupil1, pupil2);
 zaqui.position.set(0,0 , - parameters.galaxy.diameter * 0.5 - 8.5)
 scene.add(zaqui);
+
+// aquarium walls
+const walls = new THREE.Group()
+const wallPos = parameters.galaxy.diameter * 0.5 + 0.25;
+const wall1 = new THREE.Mesh(
+  new THREE.PlaneGeometry( wallPos * 2, wallPos * 2),
+  new THREE.MeshStandardMaterial({alphaMap: glassAlphaMap, transparent: true})
+)
+const wall2 = wall1.clone();
+const wall3 = wall1.clone();
+const wall4 = wall1.clone();
+const wall5 = wall1.clone();
+
+wall2.rotation.y = - Math.PI * 0.5;
+wall3.rotation.y = Math.PI;
+wall4.rotation.y =  Math.PI * 0.5;
+wall5.rotation.x = - Math.PI * 0.5;
+
+wall1.position.z = - wallPos;
+wall2.position.x = wallPos;
+wall3.position.z = wallPos;
+wall4.position.x = - wallPos;
+wall5.position.y = - wallPos;
+
+
+walls.add(wall1, wall2, wall3, wall4, wall5)
+scene.add(walls)
 // cube of example
 /* const cube = new THREE.Mesh(
   new THREE.BoxGeometry(1, 1, 1),
@@ -431,7 +467,10 @@ const tick = () => {
     if (velocity.right != 0)
       control.moveRight(velocity.right * currentVelocity);
   }
-
+  // limit distance from origin
+  if(control.getObject().position.length() >= parameters.galaxy.diameter * 0.5) {
+    control.getObject().position.setLength(parameters.galaxy.diameter * 0.5);
+  }
   // render
   renderer.render(scene, camera);
   // update objects
