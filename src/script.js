@@ -113,6 +113,7 @@ let fishSwimAnimation = null;
 gltfLoader.load("assets/models/fish.glb", (gltf) => {
   fish = gltf.scene;
   fish.position.random();
+
   // fix rotation
   fish.rotation.y -= Math.PI * 0.5;
   fish.updateMatrixWorld();
@@ -162,7 +163,7 @@ gltfLoader.load("assets/models/fish.glb", (gltf) => {
     fishModel.scale.set(random, random, random);
     // random start position
     fishModel.position.random();
-    fishModel.position.multiplyScalar(parameters.galaxy.diameter * 0.2);
+    fishModel.position.multiplyScalar(parameters.galaxy.diameter * 0.3);
     // animate
     moveFish(fishModel);
     // add
