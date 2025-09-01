@@ -129,15 +129,21 @@ gltfLoader.load("assets/models/fish.glb", (gltf) => {
   gltfLoader.load("./assets/models/Duck/glTF-Binary/Duck.glb", (gltf) => {
     gltf.scene.scale.set(0.5, 0.5, 0.5);
     gltf.scene.position.set(0, -wallPos * 0.75, 0);
-    for (let i = 0; i <= 10; i++) {
-      const duckModel = gltf.scene.clone();
-      duckModel.position.set(
-        (Math.random() - 0.5) * wallPos * 2,
-        -wallPos * 0.75,
-        (Math.random() - 0.5) * wallPos * 2
+      const duck2 = gltf.scene.clone();
+      duck2.position.set(
+        parameters.galaxy.diameter * 0.25,
+        -wallPos * 0.78,
+        - parameters.galaxy.diameter * 0.48
       );
-      scene.add(duckModel);
-    }
+      duck2.rotation.set(0,0,Math.PI * 0.25)
+      scene.add(duck2);
+    scene.add(gltf.scene);
+  });
+  // treasure box
+  gltfLoader.load("./assets/models/treasure_chest_1k.gltf/treasure_chest_1k.gltf", (gltf) => {
+    gltf.scene.scale.set(5, 5, 5);
+    gltf.scene.position.set(0, -wallPos * 0.8, - parameters.galaxy.diameter * 0.4);
+    gltf.scene.rotation.set(0,  0,  Math.PI * 0.1);
     scene.add(gltf.scene);
   });
 
