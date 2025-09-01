@@ -377,8 +377,10 @@ scene.add(cube); */
 /**
  * Lights
  */
-const ambientLight = new THREE.AmbientLight("#545454", 1);
+const ambientLight = new THREE.AmbientLight("#ffffff", 0.5);
 scene.add(ambientLight);
+// guis
+guiScene.add(ambientLight,"intensity").min(0.1).max(3).step(0.1).name("ambientIntensity")
 /**
  * canvas
  */
