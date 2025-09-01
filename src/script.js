@@ -106,6 +106,7 @@ guiScene.add(scene, "environmentIntensity").min(0.01).max(3).step(0.01);
 /**
  * models
  */
+// fish
 const gltfLoader = new GLTFLoader();
 
 let fish = null;
@@ -122,6 +123,18 @@ gltfLoader.load("assets/models/fish.glb", (gltf) => {
     if (child.isMesh) {
       child.geometry.applyMatrix4(fish.matrixWorld);
     }
+  });
+  // duck
+  const gltfLoader = new GLTFLoader();
+  gltfLoader.load("./assets/models/Duck/glTF-Binary/Duck.glb", (gltf) => {
+    gltf.scene.scale.set(0.5, 0.5, 0.5);
+    gltf.scene.position.set(0, - wallPos * 0.75 ,0)
+    for(let i=0; i <= 10; i++ )  {
+      const duckModel = gltf.scene.clone();
+      duckModel.position.set((Math.random() - 0.5) * wallPos * 2, - wallPos * 0.75 ,(Math.random() - 0.5) * wallPos * 2)
+      scene.add(duckModel)
+    }
+    scene.add(gltf.scene);
   });
 
   // create animation
@@ -150,7 +163,7 @@ gltfLoader.load("assets/models/fish.glb", (gltf) => {
     fishModel.lookAt(destination);
     // move
     gsap.to(fishModel.position, {
-      duration: 5,
+      duration: 2 + Math.random() * 3,
       x: destination.x,
       y: destination.y,
       z: destination.z,
@@ -306,7 +319,7 @@ const body = new THREE.Mesh(
 );
 body.position.y = -6;
 
-zaqui.add(head,hand1, hand2, body);
+zaqui.add(head, hand1, hand2, body);
 zaqui.position.set(0, 0, -parameters.galaxy.diameter * 0.5 - 6);
 scene.add(zaqui);
 
@@ -523,10 +536,7 @@ const tick = () => {
     }
   }
   // limit distance from origin
-  if (
-    control.object.position.length() >=
-    parameters.galaxy.diameter * 0.5
-  ) {
+  if (control.object.position.length() >= parameters.galaxy.diameter * 0.5) {
     control.object.position.setLength(parameters.galaxy.diameter * 0.5);
   }
   // render
