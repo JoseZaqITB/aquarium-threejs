@@ -38,7 +38,7 @@ gui.hide();
 /**
  *  textures
  */
-const glassAlphaMap = textureLoader.load("./images/glass_alphaMap_v2.jpg");
+const glassAlphaMap = textureLoader.load("./images/glass_alphaMap .jpg");
 glassAlphaMap.repeat = new THREE.Vector2(4, 4);
 glassAlphaMap.wrapS = THREE.RepeatWrapping;
 glassAlphaMap.wrapT = THREE.RepeatWrapping;
@@ -128,11 +128,15 @@ gltfLoader.load("assets/models/fish.glb", (gltf) => {
   const gltfLoader = new GLTFLoader();
   gltfLoader.load("./assets/models/Duck/glTF-Binary/Duck.glb", (gltf) => {
     gltf.scene.scale.set(0.5, 0.5, 0.5);
-    gltf.scene.position.set(0, - wallPos * 0.75 ,0)
-    for(let i=0; i <= 10; i++ )  {
+    gltf.scene.position.set(0, -wallPos * 0.75, 0);
+    for (let i = 0; i <= 10; i++) {
       const duckModel = gltf.scene.clone();
-      duckModel.position.set((Math.random() - 0.5) * wallPos * 2, - wallPos * 0.75 ,(Math.random() - 0.5) * wallPos * 2)
-      scene.add(duckModel)
+      duckModel.position.set(
+        (Math.random() - 0.5) * wallPos * 2,
+        -wallPos * 0.75,
+        (Math.random() - 0.5) * wallPos * 2
+      );
+      scene.add(duckModel);
     }
     scene.add(gltf.scene);
   });
@@ -498,6 +502,11 @@ const controlGui = gui.addFolder("Control");
 controlGui.add(parameters.control, "acceleration").min(0.1).max(50).step(0.1);
 controlGui.add(parameters.control, "speed").min(0.25).max(100).step(0.25);
 
+// bounds
+const bounds = {
+  min: -parameters.galaxy.diameter * 0.5,
+  max: parameters.galaxy.diameter * 0.5,
+};
 /**
  * loop
  */
@@ -537,7 +546,10 @@ const tick = () => {
   }
   // limit distance from origin
   if (control.object.position.length() >= parameters.galaxy.diameter * 0.5) {
-    control.object.position.setLength(parameters.galaxy.diameter * 0.5);
+    const pos = control.object.position;
+    pos.x = Math.max(bounds.min, Math.min(bounds.max, pos.x));
+    pos.y = Math.max(bounds.min, Math.min(bounds.max, pos.y));
+    pos.z = Math.max(bounds.min, Math.min(bounds.max, pos.z));
   }
   // render
   renderer.render(scene, camera);
