@@ -282,6 +282,8 @@ pupil1.position.x = -1;
 const pupil2 = pupil1.clone();
 pupil2.position.x = 1;
 
+head.add(eye1, eye2, pupil1, pupil2);
+
 const hand1 = new THREE.Mesh(
   new THREE.CapsuleGeometry(1, 4, 4, 8),
   new THREE.MeshStandardMaterial({
@@ -304,7 +306,7 @@ const body = new THREE.Mesh(
 );
 body.position.y = -6;
 
-zaqui.add(head, eye1, eye2, hand1, hand2, body, pupil1, pupil2);
+zaqui.add(head,hand1, hand2, body);
 zaqui.position.set(0, 0, -parameters.galaxy.diameter * 0.5 - 6);
 scene.add(zaqui);
 
@@ -497,6 +499,8 @@ const tick = () => {
   if (particleMaterial !== null) {
     particleMaterial.uniforms.uTime.value = elapsedTime;
   }
+  // animate head
+  head.lookAt(control.object.position);
   // update control
   if (velocity.forward != 0 || velocity.right != 0 || velocity.up != 0) {
     currentVelocity +=
