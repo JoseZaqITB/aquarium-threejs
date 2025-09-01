@@ -38,7 +38,7 @@ gui.hide();
 /**
  *  textures
  */
-const glassAlphaMap = textureLoader.load("./images/glass_alphaMap .jpg");
+const glassAlphaMap = textureLoader.load("./images/glass_alphaMap.jpg");
 glassAlphaMap.repeat = new THREE.Vector2(4, 4);
 glassAlphaMap.wrapS = THREE.RepeatWrapping;
 glassAlphaMap.wrapT = THREE.RepeatWrapping;
